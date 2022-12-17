@@ -29,6 +29,7 @@ namespace MotorX.DataService.IConfiguration
         ICarFeatureRepository CarFeature { get; }
         ICustomerInfoRepository CustomerInfo { get; }
         IFavoriteOfferRepository FavoriteOffer { get; }
+        INotificationRepository Notification { get; }
         Task CompleteAsync();
     }
 }

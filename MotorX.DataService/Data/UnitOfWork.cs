@@ -35,6 +35,7 @@ namespace MotorX.DataService.Data
         public ICarFeatureRepository CarFeature { get; private set; }
         public ICustomerInfoRepository CustomerInfo { get; private set; }
         public IFavoriteOfferRepository FavoriteOffer { get; private set; }
+        public INotificationRepository Notification { get; private set; }
         public UnitOfWork(AppDbContext context, ILoggerFactory loggerFactory)
         {
             _context = context;
@@ -59,6 +60,7 @@ namespace MotorX.DataService.Data
             CarFeature = new CarFeaturesRepository(context, _logger);
             CustomerInfo = new CustomerInfoRepository(context, _logger);
             FavoriteOffer = new FavoriteOfferRepository(context, _logger);
+            Notification = new NotificationRepository(context, _logger);
         }
 
 

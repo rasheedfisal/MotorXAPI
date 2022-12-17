@@ -3,6 +3,7 @@ using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using MotorX.DataService.Data;
 
@@ -11,9 +12,10 @@ using MotorX.DataService.Data;
 namespace MotorX.DataService.Migrations
 {
     [DbContext(typeof(AppDbContext))]
-    partial class AppDbContextModelSnapshot : ModelSnapshot
+    [Migration("20221114221534_add notification entity")]
+    partial class addnotificationentity
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -390,9 +392,6 @@ namespace MotorX.DataService.Migrations
                     b.Property<DateTime>("UpdateDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<string>("UserId")
-                        .HasColumnType("nvarchar(450)");
-
                     b.Property<string>("YTLink")
                         .HasMaxLength(500)
                         .HasColumnType("nvarchar(500)");
@@ -417,8 +416,6 @@ namespace MotorX.DataService.Migrations
                     b.HasIndex("SpecsId");
 
                     b.HasIndex("TrimId");
-
-                    b.HasIndex("UserId");
 
                     b.HasIndex("YearId");
 
@@ -1056,17 +1053,11 @@ namespace MotorX.DataService.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("MotorX.DataService.Entities.ApplicationUser", "AppUser")
-                        .WithMany()
-                        .HasForeignKey("UserId");
-
                     b.HasOne("MotorX.DataService.Entities.Year", "Year")
                         .WithMany()
                         .HasForeignKey("YearId")
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
-
-                    b.Navigation("AppUser");
 
                     b.Navigation("BrandModel");
 

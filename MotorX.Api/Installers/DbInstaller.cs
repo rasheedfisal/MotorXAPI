@@ -14,7 +14,7 @@ namespace MotorX.Api.Installers
             builder.Services.AddDbContext<AppDbContext>(options =>
             {
                 var connectionString = builder.Configuration.GetConnectionString("DefaultConnection");
-               // options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
+                //options.UseMySql(connectionString, ServerVersion.AutoDetect(connectionString));
                 options.UseSqlServer(connectionString);
 
                 //builder.Services.AddTransient<UserManager<ApplicationUser>>();

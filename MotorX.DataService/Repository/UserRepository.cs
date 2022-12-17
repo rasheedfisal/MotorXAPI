@@ -22,7 +22,7 @@ namespace MotorX.DataService.Repository
         {
             try
             {
-                return await dbset.Where(x => x.IsDeleted == false)
+                return await dbset.Where(x => x.IsDeleted == false && !x.Email.ToLower().Contains("@admin.com"))
                     .OrderBy(x => x.UserName)
                     .AsNoTracking()
                     .ToListAsync();

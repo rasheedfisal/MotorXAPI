@@ -60,5 +60,9 @@ namespace MotorX.DataService.Entities
         public string? YTLink { get; set; }
 
         public ICollection<FavoriteOffer> Favorite { get; set; }
+
+        public string? UserId { get; set; }
+        [ForeignKey(nameof(UserId))]
+        public ApplicationUser AppUser { get; set; }
     }
 }

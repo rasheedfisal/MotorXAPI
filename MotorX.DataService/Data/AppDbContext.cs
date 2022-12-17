@@ -30,6 +30,7 @@ namespace MotorX.DataService.Data
         public virtual DbSet<CarFeatures> CarFeatures { get; set; }
         public virtual DbSet<OfferCustomerInfo> OfferCustomerInfo { get; set; }
         public virtual DbSet<FavoriteOffer> FavoriteOffer { get; set; }
+        public virtual DbSet<Notification> Notification { get; set; }
 
         public AppDbContext(DbContextOptions<AppDbContext> options): base(options)
         {

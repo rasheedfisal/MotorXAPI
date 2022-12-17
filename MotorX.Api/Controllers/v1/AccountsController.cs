@@ -22,17 +22,32 @@ namespace MotorX.Api.Controllers.v1
         private readonly UserManager<ApplicationUser> _userManager;
         private readonly JwtConfig _jwtConfig;
         private readonly TokenValidationParameters _tokenValidationParameters;
-        //private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
+        private readonly IPasswordHasher<ApplicationUser> _passwordHasher;
         public AccountsController(IUnitOfWork unitOfWork,
             UserManager<ApplicationUser> userManager,
-            //IPasswordHasher<ApplicationUser> passwordHasher,
+            IPasswordHasher<ApplicationUser> passwordHasher,
             IOptionsMonitor<JwtConfig> optionsMonitor,
             TokenValidationParameters tokenValidationParameters) : base(unitOfWork)
         {
             _userManager = userManager;
-            //_passwordHasher = passwordHasher;
+            _passwordHasher = passwordHasher;
             _jwtConfig = optionsMonitor.CurrentValue;
             _tokenValidationParameters = tokenValidationParameters;
+        }
+        [AllowAnonymous]
+        [HttpGet]
+        [Route("Test")]
+        public IActionResult Test()
+        {
+            try
+            {
+                return Ok(new { message = "SuccessFull EndPoint" });
+
+            }
+            catch (Exception ex)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError, ex.Message);
+            }
         }
         [HttpGet]
         [Route("GetAll")]
@@ -48,7 +63,9 @@ namespace MotorX.Api.Controllers.v1
                 FirstName = x.FirstName,
                 LastName = x.LastName,
                 Email = x.Email,
-                Password = x.PasswordHash
+                Password = x.PasswordHash,
+                PhoneNumber = x.PhoneNumber,
+                LockoutEnabled = x.LockoutEnabled
             }).ToList();
 
             return Ok(UserDto);
@@ -75,7 +92,71 @@ namespace MotorX.Api.Controllers.v1
                 FirstName = UserExist.FirstName!,
                 LastName = UserExist.LastName!,
                 Email = UserExist.Email,
-                Password = UserExist.PasswordHash
+                Password = UserExist.PasswordHash,
+                PhoneNumber = UserExist.PhoneNumber,
+                LockoutEnabled = UserExist.LockoutEnabled
+            });
+        }
+
+        [HttpPut]
+        [Route("UpdateProfile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateRequest userUpdate)
+        {
+            //return Ok(await _user.FindByIdAsync(userid));
+            var IsValidFormat = Guid.TryParse(userUpdate.UserId, out var userId);
+
+            if (!IsValidFormat) return BadRequest("Invalid Format");
+
+            var UserExist = await _unitOfWork.User.GetAsync(userId);
+
+            if (UserExist is null) return NotFound("User Not Found");
+
+
+
+
+            if (!string.IsNullOrEmpty(userUpdate.Password))
+            {
+                var x = await _userManager.ChangePasswordAsync(UserExist, userUpdate.CurrentPassword, userUpdate.Password);
+                if (!x.Succeeded)
+                {
+                    var errors = x.Errors.ToList().Select(x => x.Description);
+                    return BadRequest(new UserRegistrationResponse
+                    {
+                        Success = false,
+                        Errors = errors.ToList(),
+                    });
+                }
+            }
+
+            if (!string.IsNullOrEmpty(userUpdate.FirstName))
+                UserExist.FirstName = userUpdate.FirstName;
+
+            if (!string.IsNullOrEmpty(userUpdate.LastName))
+                UserExist.LastName = userUpdate.LastName;
+
+            if (!string.IsNullOrEmpty(userUpdate.Email))
+                UserExist.Email = userUpdate.Email;
+
+            if (!string.IsNullOrEmpty(userUpdate.PhoneNumber))
+                UserExist.PhoneNumber = userUpdate.PhoneNumber;
+            var IsUpdated = await _userManager.UpdateAsync(UserExist);
+
+            if (!IsUpdated.Succeeded)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+
+
+
+            return Ok(new UserResponse
+            {
+                Id = Guid.Parse(UserExist.Id),
+                FirstName = UserExist.FirstName!,
+                LastName = UserExist.LastName!,
+                Email = UserExist.Email,
+                Password = UserExist.PasswordHash,
+                PhoneNumber = UserExist.PhoneNumber,
+                LockoutEnabled = UserExist.LockoutEnabled
             });
         }
 
@@ -97,17 +178,25 @@ namespace MotorX.Api.Controllers.v1
 
             if (!string.IsNullOrEmpty(userUpdate.Password))
             {
-                var x = await _userManager.ChangePasswordAsync(UserExist, userUpdate.CurrentPassword, userUpdate.Password);
-                if (!x.Succeeded)
+                // var x = await _userManager.ChangePasswordAsync(UserExist, userUpdate.CurrentPassword, userUpdate.Password);
+                var hashedPassword = _passwordHasher.HashPassword(UserExist, userUpdate.Password);
+                if (!string.IsNullOrEmpty(hashedPassword))
                 {
-                    return BadRequest("Password not match");
+                    UserExist.PasswordHash = hashedPassword;
                 }
             }
 
             if (!string.IsNullOrEmpty(userUpdate.FirstName))
                 UserExist.FirstName = userUpdate.FirstName;
-            if (!string.IsNullOrEmpty(userUpdate.FirstName))
+
+            if (!string.IsNullOrEmpty(userUpdate.LastName))
                 UserExist.LastName = userUpdate.LastName;
+
+            if (!string.IsNullOrEmpty(userUpdate.Email))
+                UserExist.Email = userUpdate.Email;
+
+            if (!string.IsNullOrEmpty(userUpdate.PhoneNumber))
+                UserExist.PhoneNumber = userUpdate.PhoneNumber;
             var IsUpdated = await _userManager.UpdateAsync(UserExist);
 
             if (!IsUpdated.Succeeded)
@@ -115,15 +204,42 @@ namespace MotorX.Api.Controllers.v1
                 return StatusCode(StatusCodes.Status500InternalServerError);
             }
 
+
+
             return Ok(new UserResponse
             {
                 Id = Guid.Parse(UserExist.Id),
                 FirstName = UserExist.FirstName!,
                 LastName = UserExist.LastName!,
                 Email = UserExist.Email,
-                Password = UserExist.PasswordHash
+                Password = UserExist.PasswordHash,
+                PhoneNumber = UserExist.PhoneNumber,
+                LockoutEnabled = UserExist.LockoutEnabled
             });
         }
+
+        [HttpPut]
+        [Route("LockUnlock")]
+        public async Task<IActionResult> LockUnlock([FromQuery] string userid)
+        {
+            var IsValidFormat = Guid.TryParse(userid, out var userId);
+
+            if (!IsValidFormat) return BadRequest("Invalid Format");
+
+            var UserExist = await _unitOfWork.User.GetAsync(userId);
+
+            if (UserExist is null) return NotFound("User Not Found");
+
+            UserExist.LockoutEnabled = !UserExist.LockoutEnabled;
+            var IsUpdated = await _userManager.UpdateAsync(UserExist);
+
+            if (!IsUpdated.Succeeded)
+            {
+                return StatusCode(StatusCodes.Status500InternalServerError);
+            }
+            return Ok();
+        }
+
 
         [HttpDelete]
         [Route("Remove")]
@@ -186,7 +302,9 @@ namespace MotorX.Api.Controllers.v1
                 FirstName = userRegistrationRequest.FirstName,
                 LastName = userRegistrationRequest.LastName,
                 Email = userRegistrationRequest.Email,
-                UserName = userRegistrationRequest.Email
+                UserName = userRegistrationRequest.Email,
+                PhoneNumber = userRegistrationRequest.PhoneNumber,
+                LockoutEnabled = false
             };
 
             var IsCreated = await _userManager.CreateAsync(newUser, userRegistrationRequest.Password);
@@ -246,6 +364,20 @@ namespace MotorX.Api.Controllers.v1
                 });
             }
 
+            if (UserExist.LockoutEnabled)
+            {
+                //return Unauthorized(new UserLoginResponse
+                //{
+                //    Success = false,
+                //    Errors = new List<string>()
+                //    {
+                //        "The User is Locked"
+                //    }
+                //});
+
+                return StatusCode(StatusCodes.Status423Locked);
+            }
+
             var IsCorrect = await _userManager.CheckPasswordAsync(UserExist, loginRequest.Password);
             if (!IsCorrect)
             {
@@ -268,7 +400,10 @@ namespace MotorX.Api.Controllers.v1
             {
                 Success = true,
                 Token = generatedToken.JwtToken,
+                Id = UserExist.Id,
                 UserName = UserExist.UserName,
+                FullName = $"{UserExist.FirstName} {UserExist.LastName}"
+
                 //RefreshToken = generatedToken.RefreshToken
             });
 
@@ -324,7 +459,7 @@ namespace MotorX.Api.Controllers.v1
 
                 Response.Cookies.Append("X-Access-Token", generatedToken.Token, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.None, Secure = true, MaxAge = TimeSpan.FromDays(1) });
                 Response.Cookies.Append("X-Refresh-Token", generatedToken.RefreshToken, new CookieOptions() { HttpOnly = true, SameSite = SameSiteMode.None, Secure = true, MaxAge = TimeSpan.FromDays(1) });
-                
+
                 var tokenHandler = new JwtSecurityTokenHandler();
                 var principal = tokenHandler.ValidateToken(accessToken, _tokenValidationParameters, out var validatedToken);
                 //var email = principal.Claims.SingleOrDefault(x => x.Type == JwtRegisteredClaimNames.Sub)!.Value;
@@ -334,7 +469,9 @@ namespace MotorX.Api.Controllers.v1
                 {
                     Success = true,
                     Token = generatedToken.Token,
-                    UserName = user.UserName,
+                    Id = user.Id,
+                    UserName = user.Email,
+                    FullName = $"{user.FirstName} {user.LastName}"
                     //RefreshToken = generatedToken.RefreshToken
                 });
             }

@@ -64,6 +64,23 @@ namespace MotorX.Api.Controllers.v1
                 }
             });
         }
+        [HttpGet]
+        [Route("GetModelByBrand", Name = "GetModelByBrand")]
+        public async Task<IActionResult> GetModelByBrand([FromQuery] Guid bid)
+        {
+            var result = (await _unitOfWork.BrandModel.FindAllAsync(x => x.BrandId == bid && x.IsDeleted == false)).ToList();
+
+            if (result is null) return NotFound("Item Not Found");
+
+
+
+            return Ok(result.Select(x => new BrandModel
+            {
+                Id = x.Id,
+                ModelName = x.ModelName,
+                ModelNameAr = x.ModelNameAr,
+            }));
+        }
 
         [HttpPost]
         [Route("Add")]

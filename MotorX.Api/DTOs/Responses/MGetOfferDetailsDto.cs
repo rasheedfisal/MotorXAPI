@@ -1,4 +1,6 @@
-﻿namespace MotorX.Api.DTOs.Responses
+﻿using MotorX.Auth.DTO.Responses;
+
+namespace MotorX.Api.DTOs.Responses
 {
     public class MGetOfferDetailsDto
     {
@@ -21,8 +23,8 @@
 
         public List<ImageGallaryDto> ImageGallaries { get; set; }
         public List<FeaturetypeAllDto> FeaturesTypes { get; set; }
-
         public string? YTLink { get; set; }
         public bool IsFavorite { get; set; }
+        public OfferUserResponse? User { get; set; }
     }
 }

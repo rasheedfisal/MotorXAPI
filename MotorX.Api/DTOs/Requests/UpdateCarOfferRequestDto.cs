@@ -29,5 +29,6 @@ namespace MotorX.Api.DTOs.Requests
         public bool IsActive { get; set; }
 
         public string? YTLink { get; set; }
+        public string? UserId { get; set; }
     }
 }

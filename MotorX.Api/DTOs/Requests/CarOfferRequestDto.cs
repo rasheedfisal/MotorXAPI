@@ -33,5 +33,6 @@ namespace MotorX.Api.DTOs.Requests
         public List<CarFeaturesRequestDto> CarFeatures { get; set; }
 
         public string? YTLink { get; set; }
+        public string? UserId { get; set; }
     }
 }

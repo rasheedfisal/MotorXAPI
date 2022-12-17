@@ -38,7 +38,8 @@ namespace MotorX.Api.Controllers.v1
             var route = Request.Path.Value;
 
             string? searchWord = carOfferFilter.search;
-            var result = string.IsNullOrEmpty(searchWord)
+            string? clientNo = carOfferFilter.ClientId;
+            var result = string.IsNullOrEmpty(searchWord) && string.IsNullOrEmpty(clientNo)
                ? await _unitOfWork.CarOffer.GetAllAsync(paginationFilter)
                : await _unitOfWork.CarOffer.FindAllAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
                     || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
@@ -136,8 +137,8 @@ namespace MotorX.Api.Controllers.v1
                 }).ToList(),
                 YTLink = x.YTLink ?? null,
             }).ToList();
-
-            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            var totalRecords = result.Count();
+            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -155,14 +156,23 @@ namespace MotorX.Api.Controllers.v1
             };
             var route = Request.Path.Value;
             string? searchWord = carOfferFilter.search;
+            string? clientNo = carOfferFilter.ClientId;
+            //var result = string.IsNullOrEmpty(searchWord)
+            //   ? await _unitOfWork.CarOffer.GetMAllOfferAsync(carOfferFilter.ClientId, paginationFilter)
+            //   : await _unitOfWork.CarOffer.FindMAllAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.ModelName.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.ModelNameAr.ToLower().Contains(searchWord.ToLower())
+            //       || x.Cartype.TypeName.ToLower().Contains(searchWord.ToLower())
+            //       || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), paginationFilter);
             var result = string.IsNullOrEmpty(searchWord)
-               ? await _unitOfWork.CarOffer.GetMAllOfferAsync(carOfferFilter.ClientId, paginationFilter)
-               : await _unitOfWork.CarOffer.FindMAllAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
+               ? await _unitOfWork.CarOffer.GetMAllOfferAsync(null, clientNo, paginationFilter)
+               : await _unitOfWork.CarOffer.GetMAllOfferAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
                    || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
                    || x.BrandModel.ModelName.ToLower().Contains(searchWord.ToLower())
                    || x.BrandModel.ModelNameAr.ToLower().Contains(searchWord.ToLower())
                    || x.Cartype.TypeName.ToLower().Contains(searchWord.ToLower())
-                   || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), paginationFilter);
+                   || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), clientNo, paginationFilter);
 
             var carOfferDto = result.Select(x => new MGetAllOfferDto
             {
@@ -200,15 +210,15 @@ namespace MotorX.Api.Controllers.v1
                     Id = x.Cartype.Id,
                     TypeName = x.Cartype.TypeName,
                     TypeNameAr = x.Cartype.TypeNameAr,
-                    ImgPath = x.Cartype.ImgPath,
+                    ImgPath = string.IsNullOrEmpty(x.Cartype.ImgPath) ? null : $"{_uriService.GetBaseRoot()}/{x.Cartype.ImgPath?.Replace("\\", "/")}",
                 },
                 IsActive = x.IsActive,
                 YTLink = x.YTLink ?? null,
                 MainImg = $"{_uriService.GetBaseRoot()}/{x.ImageGallaries?.FirstOrDefault()?.FilePath.Replace("\\", "/")}",
                 IsFavorite = x.Favorite is null || x.Favorite.Count == 0 ? false : x.Favorite.First().IsFavorite
             }).ToList();
-
-            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            var totalRecords = result.Count();
+            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -226,14 +236,24 @@ namespace MotorX.Api.Controllers.v1
             };
             var route = Request.Path.Value;
             string? searchWord = carOfferFilter.search;
+            string? clientNo = carOfferFilter.ClientId;
+            //var result = string.IsNullOrEmpty(searchWord)
+            //   ? await _unitOfWork.CarOffer.GetMAllOfferDevAsync(carOfferFilter.ClientId, paginationFilter)
+            //   : await _unitOfWork.CarOffer.FindMAllAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.ModelName.ToLower().Contains(searchWord.ToLower())
+            //       || x.BrandModel.ModelNameAr.ToLower().Contains(searchWord.ToLower())
+            //       || x.Cartype.TypeName.ToLower().Contains(searchWord.ToLower())
+            //       || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), paginationFilter);
+
             var result = string.IsNullOrEmpty(searchWord)
-               ? await _unitOfWork.CarOffer.GetMAllOfferDevAsync(carOfferFilter.ClientId, paginationFilter)
-               : await _unitOfWork.CarOffer.FindMAllAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
-                   || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
-                   || x.BrandModel.ModelName.ToLower().Contains(searchWord.ToLower())
-                   || x.BrandModel.ModelNameAr.ToLower().Contains(searchWord.ToLower())
-                   || x.Cartype.TypeName.ToLower().Contains(searchWord.ToLower())
-                   || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), paginationFilter);
+              ? await _unitOfWork.CarOffer.GetMAllOfferDevAsync(null, clientNo, paginationFilter)
+              : await _unitOfWork.CarOffer.GetMAllOfferDevAsync(x => x.BrandModel.Brand.Name.ToLower().Contains(searchWord.ToLower())
+                  || x.BrandModel.Brand.NameAr.ToLower().Contains(searchWord.ToLower())
+                  || x.BrandModel.ModelName.ToLower().Contains(searchWord.ToLower())
+                  || x.BrandModel.ModelNameAr.ToLower().Contains(searchWord.ToLower())
+                  || x.Cartype.TypeName.ToLower().Contains(searchWord.ToLower())
+                  || x.Cartype.TypeNameAr.ToLower().Contains(searchWord.ToLower()), clientNo, paginationFilter);
 
             var carOfferDto = result.Select(x => new MGetAllOfferDto
             {
@@ -271,7 +291,7 @@ namespace MotorX.Api.Controllers.v1
                     Id = x.Cartype.Id,
                     TypeName = x.Cartype.TypeName,
                     TypeNameAr = x.Cartype.TypeNameAr,
-                    ImgPath = x.Cartype.ImgPath,
+                    ImgPath = string.IsNullOrEmpty(x.Cartype.ImgPath) ? null : $"{_uriService.GetBaseRoot()}/{x.Cartype.ImgPath?.Replace("\\", "/")}",
                 },
                 IsActive = x.IsActive,
                 YTLink = x.YTLink ?? null,
@@ -279,7 +299,9 @@ namespace MotorX.Api.Controllers.v1
                 IsFavorite = x.Favorite is null || x.Favorite.Count == 0 ? false : x.Favorite.First().IsFavorite
             }).ToList();
 
-            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+
+            var totalRecords = result.Count();
+            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -297,9 +319,14 @@ namespace MotorX.Api.Controllers.v1
             };
             var route = Request.Path.Value;
             string? searchWord = carOfferFilter.search;
+            string? clientNo = carOfferFilter.ClientId;
+            //var result = string.IsNullOrEmpty(searchWord)
+            //   ? await _unitOfWork.CarOffer.GetMAllOfferAsync(carOfferFilter.ClientId, paginationFilter)
+            //   : await _unitOfWork.CarOffer.FindMAllAsync(x => x.Cartype.Id == Guid.Parse(searchWord), paginationFilter);
+
             var result = string.IsNullOrEmpty(searchWord)
-               ? await _unitOfWork.CarOffer.GetMAllOfferAsync(carOfferFilter.ClientId, paginationFilter)
-               : await _unitOfWork.CarOffer.FindMAllAsync(x => x.Cartype.Id == Guid.Parse(searchWord), paginationFilter);
+               ? await _unitOfWork.CarOffer.GetMAllOfferAsync(null, clientNo, paginationFilter)
+               : await _unitOfWork.CarOffer.GetMAllOfferAsync(x => x.Cartype.Id == Guid.Parse(searchWord), clientNo, paginationFilter);
 
             var carOfferDto = result.Select(x => new MGetAllOfferDto
             {
@@ -337,7 +364,7 @@ namespace MotorX.Api.Controllers.v1
                     Id = x.Cartype.Id,
                     TypeName = x.Cartype.TypeName,
                     TypeNameAr = x.Cartype.TypeNameAr,
-                    ImgPath = x.Cartype.ImgPath,
+                    ImgPath = string.IsNullOrEmpty(x.Cartype.ImgPath) ? null : $"{_uriService.GetBaseRoot()}/{x.Cartype.ImgPath?.Replace("\\", "/")}",
                 },
                 IsActive = x.IsActive,
                 YTLink = x.YTLink ?? null,
@@ -345,7 +372,9 @@ namespace MotorX.Api.Controllers.v1
                 IsFavorite = x.Favorite is null || x.Favorite.Count == 0 ? false : x.Favorite.First().IsFavorite
             }).ToList();
 
-            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            var totalRecords = result.Count();
+
+            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -587,7 +616,12 @@ namespace MotorX.Api.Controllers.v1
                         }).ToList(),
                     }).ToList(),
                     YTLink = result.YTLink ?? null,
-                    IsFavorite = result.Favorite is null || result.Favorite.Count == 0 ? false : result.Favorite.First().IsFavorite
+                    IsFavorite = result.Favorite is null || result.Favorite.Count == 0 ? false : result.Favorite.First().IsFavorite,
+                    User = new OfferUserResponse
+                    {
+                        Email = result.AppUser.Email,
+                        PhoneNumber = result.AppUser.PhoneNumber,
+                    } ?? null
                 });
             }
             catch(Exception ex)
@@ -616,6 +650,14 @@ namespace MotorX.Api.Controllers.v1
                     TypeName = x.TypeName,
                     TypeNameAr = x.TypeNameAr,
                     ImgPath = string.IsNullOrEmpty(x.ImgPath) ? null : $"{_uriService.GetBaseRoot()}/{x.ImgPath!.Replace("\\", "/")}",
+                }).ToList();
+                var brands = await _unitOfWork.Brand.GetAllAsync();
+                var brandDto = brands.Select(x => new BrandDto
+                {
+                    Id = x.Id,
+                    Name = x.Name,
+                    NameAr = x.NameAr,
+                    LogoPath = x.LogoPath,
                 }).ToList();
                 var models = await _unitOfWork.BrandModel.GetAllAsync();
                 var modelDto = models.Select(x => new BrandModelDto
@@ -702,7 +744,7 @@ namespace MotorX.Api.Controllers.v1
                     });
                 }
 
-                return Ok(new { carTypes = cartypeDto, models = modelDto, colors = colorDto, years = yearDto, gearbox = GearboxDto, trims = trimDto, specs = specsDto, locations= locationDto, currencies = currencyDto, features = allFeatures });
+                return Ok(new { carTypes = cartypeDto, brands = brandDto, models = modelDto, colors = colorDto, years = yearDto, gearbox = GearboxDto, trims = trimDto, specs = specsDto, locations= locationDto, currencies = currencyDto, features = allFeatures });
             }
             catch (Exception ex)
             {
@@ -747,6 +789,7 @@ namespace MotorX.Api.Controllers.v1
                     Price = carOfferRequestDto.Price,//12
                     YTLink = carOfferRequestDto.YTLink,//14
                     IsActive = carOfferRequestDto.IsActive,//13
+                    UserId = carOfferRequestDto.UserId,
                 });
 
 
@@ -937,7 +980,8 @@ namespace MotorX.Api.Controllers.v1
                 Price = updateCarOfferRequestDto.Price,
                 CurrencyId = updateCarOfferRequestDto.CurrencyId,
                 IsActive = updateCarOfferRequestDto.IsActive,
-                YTLink = updateCarOfferRequestDto.YTLink
+                YTLink = updateCarOfferRequestDto.YTLink,
+                UserId = updateCarOfferRequestDto.UserId,
             }, updateCarOfferRequestDto.Id);
 
 

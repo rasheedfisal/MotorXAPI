@@ -16,6 +16,8 @@ namespace MotorX.Auth.DTO.Responses
         public string Email { get; set; }
      
         public string Password { get; set; }
+        public string PhoneNumber { get; set; }
+        public bool LockoutEnabled { get; set; }
 
     }
 }

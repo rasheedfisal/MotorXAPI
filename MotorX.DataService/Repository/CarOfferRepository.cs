@@ -170,69 +170,105 @@ namespace MotorX.DataService.Repository
             return true;
         }
 
-        public async Task<IEnumerable<CarOffer>> GetMAllOfferAsync(string? UserKey = null, PaginationFilter? paginationFilter = null)
+        public async Task<IEnumerable<CarOffer>> GetMAllOfferAsync(Expression<Func<CarOffer, bool>>? ExtraConditions = null, string? UserKey = null, PaginationFilter? paginationFilter = null)
         {
             try
             {
-                if (paginationFilter is null && UserKey is null)
+                //if (paginationFilter is null && UserKey is null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
+                //   .Include(x => x.BrandModel)
+                //       .ThenInclude(x => x.Brand)
+                //   .Include(x => x.Year)
+                //   .Include(x => x.Currency)
+                //    .Include(x => x.Cartype)
+                //     .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //   .OrderByDescending(x => x.AddedDate)
+                //   .AsNoTracking()
+                //   .ToListAsync();
+                //}
+
+                //if (paginationFilter is null && UserKey is not null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
+                //   .Include(x => x.BrandModel)
+                //       .ThenInclude(x => x.Brand)
+                //   .Include(x => x.Year)
+                //   .Include(x => x.Currency)
+                //    .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
+                //   .OrderByDescending(x => x.AddedDate)
+                //   .AsNoTracking()
+                //   .ToListAsync();
+                //}
+
+                //if (paginationFilter is not null && UserKey is null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
+                //    .Include(x => x.BrandModel)
+                //        .ThenInclude(x => x.Brand)
+                //    .Include(x => x.Year)
+                //    .Include(x => x.Currency)
+                //     .Include(x => x.Cartype)
+                //           .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //    .OrderByDescending(x => x.AddedDate)
+                //    .Skip(skip)
+                //    .Take(paginationFilter.PageSize)
+                //    .AsNoTracking()
+                //    .ToListAsync();
+                //}
+
+
+                //return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
+                //    .Include(x => x.BrandModel)
+                //        .ThenInclude(x => x.Brand)
+                //    .Include(x => x.Year)
+                //    .Include(x => x.Currency)
+                //     .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
+                //    .OrderByDescending(x => x.AddedDate)
+                //    .Skip(skip)
+                //    .Take(paginationFilter.PageSize)
+                //    .AsNoTracking()
+                //    .ToListAsync();
+
+                var query = dbset.Where(x => x.IsDeleted == false && x.IsActive == true);
+
+                if (ExtraConditions != null)
                 {
-                    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
+                    query = query.Where(ExtraConditions);
+                }
+
+                query = query
                    .Include(x => x.BrandModel)
                        .ThenInclude(x => x.Brand)
                    .Include(x => x.Year)
                    .Include(x => x.Currency)
                     .Include(x => x.Cartype)
-                     .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                   .OrderByDescending(x => x.AddedDate)
-                   .AsNoTracking()
-                   .ToListAsync();
+                     .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo));
+                if (UserKey is not null)
+                {
+                    query = query.Include(x => x.Favorite.Where(x => x.UserId == UserKey));
                 }
 
-                if (paginationFilter is null && UserKey is not null)
+                if (paginationFilter is not null)
                 {
-                    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
-                   .Include(x => x.BrandModel)
-                       .ThenInclude(x => x.Brand)
-                   .Include(x => x.Year)
-                   .Include(x => x.Currency)
-                    .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
-                   .OrderByDescending(x => x.AddedDate)
-                   .AsNoTracking()
-                   .ToListAsync();
-                }
-                var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
-                if (paginationFilter is not null && UserKey is null)
-                {
-                    return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
-                    .Include(x => x.BrandModel)
-                        .ThenInclude(x => x.Brand)
-                    .Include(x => x.Year)
-                    .Include(x => x.Currency)
-                     .Include(x => x.Cartype)
-                           .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                    .OrderByDescending(x => x.AddedDate)
-                    .Skip(skip)
-                    .Take(paginationFilter.PageSize)
-                    .AsNoTracking()
-                    .ToListAsync();
+                    var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+
+                    query = query.Skip(skip)
+                    .Take(paginationFilter.PageSize);
                 }
 
-              
-                return await dbset.Where(x => x.IsDeleted == false && x.IsActive == true)
-                    .Include(x => x.BrandModel)
-                        .ThenInclude(x => x.Brand)
-                    .Include(x => x.Year)
-                    .Include(x => x.Currency)
-                     .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
-                    .OrderByDescending(x => x.AddedDate)
-                    .Skip(skip)
-                    .Take(paginationFilter.PageSize)
-                    .AsNoTracking()
-                    .ToListAsync();
+                var result = await query
+                            .OrderByDescending(x => x.AddedDate)
+                            .AsNoTracking()
+                            .ToListAsync()
+                            .ConfigureAwait(false);
+
+                return result;
+
             }
             catch (Exception ex)
             {
@@ -241,69 +277,104 @@ namespace MotorX.DataService.Repository
             }
         }
 
-        public async Task<IEnumerable<CarOffer>> GetMAllOfferDevAsync(string? UserKey = null, PaginationFilter? paginationFilter = null)
+        public async Task<IEnumerable<CarOffer>> GetMAllOfferDevAsync(Expression<Func<CarOffer, bool>>? ExtraConditions = null, string ? UserKey = null, PaginationFilter? paginationFilter = null)
         {
             try
             {
-                if (paginationFilter is null && UserKey is null)
+                //if (paginationFilter is null && UserKey is null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false)
+                //   .Include(x => x.BrandModel)
+                //       .ThenInclude(x => x.Brand)
+                //   .Include(x => x.Year)
+                //   .Include(x => x.Currency)
+                //    .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //   .OrderByDescending(x => x.AddedDate)
+                //   .AsNoTracking()
+                //   .ToListAsync();
+                //}
+
+                //if (paginationFilter is null && UserKey is not null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false)
+                //   .Include(x => x.BrandModel)
+                //       .ThenInclude(x => x.Brand)
+                //   .Include(x => x.Year)
+                //   .Include(x => x.Currency)
+                //    .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
+                //   .OrderByDescending(x => x.AddedDate)
+                //   .AsNoTracking()
+                //   .ToListAsync();
+                //}
+                //var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+                //if (paginationFilter is not null && UserKey is null)
+                //{
+                //    return await dbset.Where(x => x.IsDeleted == false)
+                //    .Include(x => x.BrandModel)
+                //        .ThenInclude(x => x.Brand)
+                //    .Include(x => x.Year)
+                //    .Include(x => x.Currency)
+                //     .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //    .OrderByDescending(x => x.AddedDate)
+                //    .Skip(skip)
+                //    .Take(paginationFilter.PageSize)
+                //    .AsNoTracking()
+                //    .ToListAsync();
+                //}
+
+
+                //return await dbset.Where(x => x.IsDeleted == false)
+                //    .Include(x => x.BrandModel)
+                //        .ThenInclude(x => x.Brand)
+                //    .Include(x => x.Year)
+                //    .Include(x => x.Currency)
+                //     .Include(x => x.Cartype)
+                //      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
+                //     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
+                //    .OrderByDescending(x => x.AddedDate)
+                //    .Skip(skip)
+                //    .Take(paginationFilter.PageSize)
+                //    .AsNoTracking()
+                //    .ToListAsync();
+
+                var query = dbset.Where(x => x.IsDeleted == false);
+
+                if (ExtraConditions != null)
                 {
-                    return await dbset.Where(x => x.IsDeleted == false)
-                   .Include(x => x.BrandModel)
-                       .ThenInclude(x => x.Brand)
-                   .Include(x => x.Year)
-                   .Include(x => x.Currency)
-                    .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                   .OrderByDescending(x => x.AddedDate)
-                   .AsNoTracking()
-                   .ToListAsync();
+                    query = query.Where(ExtraConditions);
                 }
 
-                if (paginationFilter is null && UserKey is not null)
-                {
-                    return await dbset.Where(x => x.IsDeleted == false)
-                   .Include(x => x.BrandModel)
-                       .ThenInclude(x => x.Brand)
-                   .Include(x => x.Year)
-                   .Include(x => x.Currency)
-                    .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
-                   .OrderByDescending(x => x.AddedDate)
-                   .AsNoTracking()
-                   .ToListAsync();
-                }
-                var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
-                if (paginationFilter is not null && UserKey is null)
-                {
-                    return await dbset.Where(x => x.IsDeleted == false)
+                query = query
                     .Include(x => x.BrandModel)
                         .ThenInclude(x => x.Brand)
                     .Include(x => x.Year)
                     .Include(x => x.Currency)
                      .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                    .OrderByDescending(x => x.AddedDate)
-                    .Skip(skip)
-                    .Take(paginationFilter.PageSize)
-                    .AsNoTracking()
-                    .ToListAsync();
+                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo));
+                if (UserKey is not null)
+                {
+                    query = query.Include(x => x.Favorite.Where(x => x.UserId == UserKey));
                 }
 
-
-                return await dbset.Where(x => x.IsDeleted == false)
-                    .Include(x => x.BrandModel)
-                        .ThenInclude(x => x.Brand)
-                    .Include(x => x.Year)
-                    .Include(x => x.Currency)
-                     .Include(x => x.Cartype)
-                      .Include(x => x.ImageGallaries.Where(p => p.IsDeleted == false).OrderBy(s => s.OrderNo))
-                     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
-                    .OrderByDescending(x => x.AddedDate)
+                if (paginationFilter is not null)
+                {
+                    var skip = (paginationFilter.PageNumber - 1) * paginationFilter.PageSize;
+                    query = query
                     .Skip(skip)
-                    .Take(paginationFilter.PageSize)
-                    .AsNoTracking()
-                    .ToListAsync();
+                    .Take(paginationFilter.PageSize);
+                }
+
+                var result = await query
+                .OrderByDescending(x => x.AddedDate)
+                .AsNoTracking()
+                .ToListAsync()
+                .ConfigureAwait(false);
+
+                return result;
             }
             catch (Exception ex)
             {
@@ -333,6 +404,7 @@ namespace MotorX.DataService.Repository
                         .ThenInclude(x => x.FeaturesType)
                             .OrderByDescending(x => x.AddedDate)
                     .Include(x => x.Favorite.Where(x => x.UserId == UserKey))
+                    .Include(x => x.AppUser)
                     .AsNoTracking()
                     .SingleOrDefaultAsync();
             }
