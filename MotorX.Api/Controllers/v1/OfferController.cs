@@ -11,6 +11,7 @@ using MotorX.DataService.Entities;
 using MotorX.DataService.IConfiguration;
 using System.Net.Http.Headers;
 using MotorX.Extensions;
+using System.Security.Claims;
 
 namespace MotorX.Api.Controllers.v1
 {
@@ -137,8 +138,8 @@ namespace MotorX.Api.Controllers.v1
                 }).ToList(),
                 YTLink = x.YTLink ?? null,
             }).ToList();
-            var totalRecords = result.Count();
-            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            //var totalRecords = result.Count();
+            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -217,8 +218,8 @@ namespace MotorX.Api.Controllers.v1
                 MainImg = $"{_uriService.GetBaseRoot()}/{x.ImageGallaries?.FirstOrDefault()?.FilePath.Replace("\\", "/")}",
                 IsFavorite = x.Favorite is null || x.Favorite.Count == 0 ? false : x.Favorite.First().IsFavorite
             }).ToList();
-            var totalRecords = result.Count();
-            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            //var totalRecords = result.Count();
+            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -300,8 +301,8 @@ namespace MotorX.Api.Controllers.v1
             }).ToList();
 
 
-            var totalRecords = result.Count();
-            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            //var totalRecords = result.Count();
+            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -372,9 +373,9 @@ namespace MotorX.Api.Controllers.v1
                 IsFavorite = x.Favorite is null || x.Favorite.Count == 0 ? false : x.Favorite.First().IsFavorite
             }).ToList();
 
-            var totalRecords = result.Count();
+            //var totalRecords = result.Count();
 
-            //var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
+            var totalRecords = await _unitOfWork.CarOffer.CountAsync(x => x.IsDeleted == false);
             var pagedResponse = PaginationHelper.CreatePagedReponse(carOfferDto, paginationQuery, totalRecords, _uriService, route!);
 
             return Ok(pagedResponse);
@@ -617,11 +618,11 @@ namespace MotorX.Api.Controllers.v1
                     }).ToList(),
                     YTLink = result.YTLink ?? null,
                     IsFavorite = result.Favorite is null || result.Favorite.Count == 0 ? false : result.Favorite.First().IsFavorite,
-                    User = new OfferUserResponse
+                    User = result.AppUser != null ?  new OfferUserResponse
                     {
                         Email = result.AppUser.Email,
                         PhoneNumber = result.AppUser.PhoneNumber,
-                    } ?? null
+                    } : null
                 });
             }
             catch(Exception ex)
@@ -770,6 +771,8 @@ namespace MotorX.Api.Controllers.v1
                         }
                     });
                 }
+
+                var UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
                 var Added = await _unitOfWork.CarOffer.AddAsync(new CarOffer
                 {
                     Description = carOfferRequestDto.Description,//1
@@ -789,7 +792,7 @@ namespace MotorX.Api.Controllers.v1
                     Price = carOfferRequestDto.Price,//12
                     YTLink = carOfferRequestDto.YTLink,//14
                     IsActive = carOfferRequestDto.IsActive,//13
-                    UserId = carOfferRequestDto.UserId,
+                    UserId = UserId,
                 });
 
 
@@ -963,6 +966,7 @@ namespace MotorX.Api.Controllers.v1
         [Route("Update")]
         public async Task<IActionResult> Update([FromBody] UpdateCarOfferRequestDto updateCarOfferRequestDto)
         {
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             var updated = await _unitOfWork.CarOffer.UpdateAsync(new CarOffer
             {
                 Id = updateCarOfferRequestDto.Id,
@@ -981,7 +985,7 @@ namespace MotorX.Api.Controllers.v1
                 CurrencyId = updateCarOfferRequestDto.CurrencyId,
                 IsActive = updateCarOfferRequestDto.IsActive,
                 YTLink = updateCarOfferRequestDto.YTLink,
-                UserId = updateCarOfferRequestDto.UserId,
+                UserId = UserId,
             }, updateCarOfferRequestDto.Id);
 
 

@@ -4,6 +4,7 @@ using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Options;
 using Microsoft.IdentityModel.Tokens;
+using MotorX.Api.DTOs.Requests;
 using MotorX.Auth.Configuration;
 using MotorX.Auth.DTO;
 using MotorX.Auth.DTO.Requests;
@@ -98,12 +99,45 @@ namespace MotorX.Api.Controllers.v1
             });
         }
 
+        [HttpGet]
+        [Route("GetUserProfile", Name = "GetUserProfile")]
+        public async Task<IActionResult> GetUserProfile()
+        {
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
+            if (UserId != null)
+            {
+                var IsValidFormat = Guid.TryParse(UserId, out var userId);
+
+                if (!IsValidFormat) return BadRequest("Invalid Format");
+
+                var UserExist = await _unitOfWork.User.GetAsync(userId);
+
+                if (UserExist is null) return NotFound("User Not Found");
+
+
+
+                return Ok(new UserResponse
+                {
+                    Id = Guid.Parse(UserExist.Id),
+                    FirstName = UserExist.FirstName!,
+                    LastName = UserExist.LastName!,
+                    Email = UserExist.Email,
+                    Password = UserExist.PasswordHash,
+                    PhoneNumber = UserExist.PhoneNumber,
+                    LockoutEnabled = UserExist.LockoutEnabled
+                });
+            }
+
+            return BadRequest();
+            
+        }
         [HttpPut]
         [Route("UpdateProfile")]
-        public async Task<IActionResult> UpdateProfile([FromBody] UserUpdateRequest userUpdate)
+        public async Task<IActionResult> UpdateProfile([FromBody] ProfileUpdateRequest userUpdate)
         {
+            var UserId = User.FindFirst(ClaimTypes.NameIdentifier)?.Value;
             //return Ok(await _user.FindByIdAsync(userid));
-            var IsValidFormat = Guid.TryParse(userUpdate.UserId, out var userId);
+            var IsValidFormat = Guid.TryParse(UserId, out var userId);
 
             if (!IsValidFormat) return BadRequest("Invalid Format");
 
@@ -243,10 +277,10 @@ namespace MotorX.Api.Controllers.v1
 
         [HttpDelete]
         [Route("Remove")]
-        public async Task<IActionResult> Remove([FromQuery] string UserId)
+        public async Task<IActionResult> Remove([FromQuery] string userid)
         {
             //return Ok(await _user.FindByIdAsync(userid));
-            var IsValidFormat = Guid.TryParse(UserId, out var userId);
+            var IsValidFormat = Guid.TryParse(userid, out var userId);
 
             if (!IsValidFormat) return BadRequest("Invalid Format");
 
@@ -400,7 +434,6 @@ namespace MotorX.Api.Controllers.v1
             {
                 Success = true,
                 Token = generatedToken.JwtToken,
-                Id = UserExist.Id,
                 UserName = UserExist.UserName,
                 FullName = $"{UserExist.FirstName} {UserExist.LastName}"
 
@@ -469,7 +502,6 @@ namespace MotorX.Api.Controllers.v1
                 {
                     Success = true,
                     Token = generatedToken.Token,
-                    Id = user.Id,
                     UserName = user.Email,
                     FullName = $"{user.FirstName} {user.LastName}"
                     //RefreshToken = generatedToken.RefreshToken
