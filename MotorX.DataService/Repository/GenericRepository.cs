@@ -3,12 +3,7 @@ using Microsoft.Extensions.Logging;
 using MotorX.DataService.Data;
 using MotorX.DataService.Entities;
 using MotorX.DataService.IRepository;
-using System;
-using System.Collections.Generic;
-using System.Linq;
 using System.Linq.Expressions;
-using System.Text;
-using System.Threading.Tasks;
 
 namespace MotorX.DataService.Repository
 {
